@@ -1,0 +1,61 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.25"
+
+      - name: Build binaries
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/}
+          COMMIT=$(git rev-parse --short HEAD)
+          BUILD_DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          LDFLAGS="-s -w -X github.com/privatebox/pvctl/cmd.Version=${VERSION} -X github.com/privatebox/pvctl/cmd.GitCommit=${COMMIT} -X github.com/privatebox/pvctl/cmd.BuildDate=${BUILD_DATE}"
+
+          mkdir -p dist
+
+          GOOS=linux GOARCH=amd64 go build -ldflags "${LDFLAGS}" -o dist/pvctl-linux-amd64 .
+          GOOS=windows GOARCH=amd64 go build -ldflags "${LDFLAGS}" -o dist/pvctl-windows-amd64.exe .
+
+      - name: Generate release notes
+        id: notes
+        run: |
+          # 获取上一个 tag
+          PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+
+          if [ -z "$PREV_TAG" ]; then
+            # 首个 tag，列出所有提交
+            NOTES=$(git log --pretty=format:"- %s (%h)" --no-merges)
+          else
+            # 两个 tag 之间的提交
+            NOTES=$(git log --pretty=format:"- %s (%h)" --no-merges ${PREV_TAG}..HEAD)
+          fi
+
+          # 写入文件（避免 multiline env 问题）
+          echo "$NOTES" > release_notes.md
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: false
+          body_path: release_notes.md
+          files: |
+            dist/pvctl-linux-amd64
+            dist/pvctl-windows-amd64.exe

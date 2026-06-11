@@ -1,0 +1,56 @@
+# Privacy Vault CLI 配置文件模板
+# 复制此文件为 .privaterc.toml 并填入你的真实隐私数据
+# 将敏感数据替换为占位符，防止在 AI 编程助手中泄露隐私
+
+[defaults]
+# 全局默认的文件大小限制（超过此大小的文件跳过替换）
+max_file_size = "10MB"
+
+# 全局默认文件类型白名单（只替换匹配这些 glob 模式的文件）
+# 注释掉 = 对所有文件生效
+# path_include = ["*.yaml", "*.json", "*.env", "*.toml", "*.md", "*.go", "*.py", "*.js", "*.ts"]
+
+# 全局默认文件类型黑名单（跳过这些文件）
+path_exclude = ["*.lock", "*.exe", "*.dll", "*.png", "*.jpg", "*.ico", "*.svg", "*.woff2", "*.ttf"]
+
+# =========================================
+# 替换规则
+# 每条规则独立配置路径过滤和大小限制
+# 支持三种匹配模式：
+#   token     — gse 中文分词后精确匹配，适合中文姓名（如 "张三" 不会误匹配 "张三丰"）
+#   exact     — 全词匹配（英文 \b 边界），适合手机号、邮箱、API Key
+#   substring — 子串替换，适合地址、长文本片段
+# =========================================
+
+# --- 中文姓名（token 模式） ---
+[[rules]]
+match = "你的姓名"
+mode = "token"
+placeholder = "<USER-NAME-MASKED>"
+
+# --- 手机号（exact 模式） ---
+[[rules]]
+match = "13800138000"
+mode = "exact"
+placeholder = "<PHONE-MASKED>"
+
+# --- 邮箱（exact 模式） ---
+[[rules]]
+match = "your@email.com"
+mode = "exact"
+placeholder = "<EMAIL-MASKED>"
+
+# --- 地址（substring 模式） ---
+[[rules]]
+match = "你的家庭地址"
+mode = "substring"
+placeholder = "<ADDRESS-MASKED>"
+
+# --- API Key（exact 模式 + 路径过滤 + 大小限制） ---
+# 只在 .env / .yaml / .json 文件中替换，且文件不超过 1MB
+# [[rules]]
+# match = "sk-xxxxxxxxxxxxxxxxxxxx"
+# mode = "exact"
+# placeholder = "<API-KEY-MASKED>"
+# path_include = ["*.env", "*.yaml", "*.json"]
+# max_file_size = "1MB"
