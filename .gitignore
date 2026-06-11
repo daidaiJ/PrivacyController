@@ -18,6 +18,6 @@ Thumbs.db
 # Qwen Code 本地目录
 .qwen/
 
-# 私人配置（包含真实敏感数据，不要提交）
-# 如果你需要提交示例配置，复制一份 .privaterc.toml.example
-.privaterc.toml
+# 私人配置（如果包含真实敏感数据，不要提交）
+# 示例配置 .privaterc.toml.example 已随仓库提供
+# .privaterc.toml
